@@ -1,34 +1,35 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from products import items
 from django.shortcuts import render, redirect
 
 def index(request):
-	return render(request,"index.html")
+	context = {
+		'items': items
+	}
+	print context
+	return render(request,"index.html", context)
 
-def buy(request):
-	product1 = {
-	'product_id': 1001,
-	'product_name': 'Dojo T-Shirt',
-	'product_price': 19.99,
-	}
-	product2 = {
-	'product_id': 1002,
-	'product_name': 'Dojo Sweater',
-	'product_price': 29.99,
-	}
-	product3 = {
-	'product_id': 1003,
-	'product_name': 'Dojo Cup',
-	'product_price': 4.99,
-	}
-	product4 = {
-	'product_id': 1004,
-	'product_name': 'Algorithm Book',
-	'product_price': 49.99,
-	}
-	bought_item = {}
+def buy(request, product_id):
+	for item in items:
+		if item['product_id'] == int(product_id):
+			amount_charged = item['product_price'] * int(request.POST['quantity'])
+			
+	# handle exceptions for session keys if they do not yet exist
+	try:
+		request.session['total_charged']
+	except KeyError:
+		request.session['total_charged'] = 0
 
-	return redirect('/buy/checkout')
+	try:
+		request.session['total_items']
+	except KeyError:
+		request.session['total_items'] = 0        
+
+	request.session['total_charged'] += amount_charged
+	request.session['total_items'] += int(request.POST['quantity'])
+	request.session['last_transaction'] = amount_charged
+	return redirect('/checkout')
 
 def checkout(request):
 	return render(request, "checkout.html")
